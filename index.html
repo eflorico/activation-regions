@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+        <title>Activation Regions</title>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<style>
+			body { margin: 0; font-family: sans-serif; font-size: 14px; text-align: center; display: flex; align-items: center; }
+			canvas { display: block; }
+            canvas:focus { outline: none; }
+            #controls { flex: 1; }
+            #weights { display: flex; justify-content: center; align-items: center; }
+            .layer { width: 300px; margin: 0 20px; }
+            .neuron { margin: 10px 0; }
+            .neuron:hover { border-color: #007bff; }
+            .custom-range { width: 80%; }
+            span { width: 20%; text-align: right; display: inline-block; vertical-align: top; }
+            label { display: block; }
+        </style>
+	</head>
+	<body>
+        <div id="controls">
+            <div id="init">
+                <button id="init-normal" class="btn btn-secondary">Initialize with Gaussian</button>
+                <button id="init-zero" class="btn btn-secondary">Initialize with all zeros</button>
+                <button id="init-zerobias" class="btn btn-secondary">Initialize with zero bias</button>
+            </div>
+            <div id="weights">
+            </div>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.5.0.min.js" integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.6.4/math.min.js"></script>
+        <script src="orbit.js"></script>
+		<script src="action.js"></script>
+	</body>
+</html>
