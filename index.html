@@ -15,20 +15,20 @@
             .layer { width: 300px; margin: 0 10px; }
             .neuron { margin: 10px 0; position: relative; }
             .neuron:hover { border-color: #007bff; }
-            .del { padding: 0; width: 24px; height: 24px; border-radius: 12px; font-size: .8rem; position: absolute; top: 5px; right: 5px; }
-            .custom-range { width: 80%; }
-            span { width: 20%; text-align: right; display: inline-block; vertical-align: top; }
-            label { display: block; }
+            .card-body {  padding: 1.25rem .5rem; }
+            .del { padding: 0; width: 20px; height: 20px; border-radius: 10px; font-size: .6rem; position: absolute; top: 3px; right: 3px; }
+            .slider { display: flex; }
+            .custom-range { flex: 1; display: block; }
+            span { width: 45px; text-align: right; display: inline-block; vertical-align: top; }
+            hr { margin: .5rem 0; }
         </style>
 	</head>
 	<body>
         <div id="controls">
             <div id="init">
-                <div class="btn-group">
-                    <button id="init-normal" class="btn btn-secondary">Initialize with Gaussian</button>
-                    <button id="init-allzero" class="btn btn-secondary">Initialize with all zeros</button>
-                    <button id="init-zerobias" class="btn btn-secondary">Initialize with zero bias</button>    
-                </div>
+                <button id="init-normal" class="btn btn-primary">Initialize with Gaussian</button>
+                <button id="init-allzero" class="btn btn-primary">Initialize with all zeros</button>
+                <button id="init-zerobias" class="btn btn-primary">Initialize with zero bias</button>    
             </div>
             <div id="weights">
             </div>

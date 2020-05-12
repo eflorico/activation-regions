@@ -247,25 +247,33 @@ function renderControls() {
         for (var j = 0; j < numNeurons[i]; ++j) {
             html += '<div class="neuron card">';
             html += '<div class="card-body">';
-            if (j > 0 || (i === numNeurons.length - 1) && numNeurons[numNeurons.length - 2] === 1) {
-                html += '<button type="button" class="btn btn-danger del">X</button>';
-            }
-            html += '<label>Weights:</label>';
             for (var k = 0; k < numPrevNeurons; ++k) {
+                html += '<div class="slider">';
                 html += '<input type="range" min="-2" max="2" step="0.001" value="' + weights[i].get([k, j]) + '" class="weight custom-range">';
                 html += '<span>' + Math.round(weights[i].get([k, j]) * 1000) / 1000 + '</span>';
+                html += '</div>';
             }
-            html += '<label>Bias:</label>';
+            html += '<hr>';
+            html += '<div class="slider">';
             html += '<input type="range" min="-2" max="2" step="0.001" value="' + biases[i].get([j]) + '" class="bias custom-range">';
             html += '<span>' + Math.round(biases[i].get([j]) * 1000) / 1000 + '</span>';
             html += '</div>';
             html += '</div>';
+            html += '</div>';
         }
+
+        html += '<div class="btn-group">';
         if (i < numNeurons.length - 1) {
             html += '<button type="button" class="btn btn-primary add-neuron">Add neuron</button>';
         } else {
             html += '<button type="button" class="btn btn-primary add-layer">Add layer</button>';
         }
+
+        if (numNeurons[i] > 1 || (i === numNeurons.length - 1) && numNeurons[numNeurons.length - 2] === 1) {
+            html += '<button type="button" class="btn btn-secondary del-neuron">Remove neuron</button>';
+        }
+
+        html += '</div>';
         html += '</div>';
     }
     $('#weights').html(html);
@@ -323,13 +331,13 @@ function renderControls() {
     });
 
     // Handle neuron delete
-    $('.del').on('click', (e) => {
+    $('.del-neuron').on('click', (e) => {
         var [layer, neuron, input] = getNeuron(e);
 
         if (numNeurons[layer] > 1) {
-            weights[layer] = dropAlongDim(weights[layer], neuron, 1);
-            weights[layer + 1] = dropAlongDim(weights[layer + 1], neuron, 0);
-            biases[layer] = dropAlongDim(biases[layer], neuron, 0);
+            weights[layer] = dropAlongDim(weights[layer], numNeurons[layer] - 1, 1);
+            weights[layer + 1] = dropAlongDim(weights[layer + 1], numNeurons[layer] - 1, 0);
+            biases[layer] = dropAlongDim(biases[layer], numNeurons[layer] - 1, 0);
             numNeurons[layer]--;
         } else {
             weights.splice(layer, 1);
