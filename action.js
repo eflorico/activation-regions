@@ -96,6 +96,7 @@ LinearRegion.prototype.getColor = function() {
     return [rng(), rng(), rng()];
 };
 
+// Returns list of LinearRegions
 function calcAR() {
     var vertices = math.matrix([[-1, -1], [1, -1], [1, 1], [-1, 1]]);
     var regions = [new LinearRegion(math.identity(2), math.zeros(2), vertices, [], '', [])];
@@ -126,7 +127,8 @@ function calcAR() {
     return regions;
 }
 
-function showAR() {
+// Calculates activation regions and renders them in 3D
+function renderAR() {
     while(scene.children.length > 0){ 
         scene.remove(scene.children[0]); 
     }
@@ -183,6 +185,8 @@ function showAR() {
 /**
  * Initialization of nnet
  */
+
+// Generate random number according to Gaussian with unit variance
 function randn_bm() {
     var u = 0, v = 0;
     while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
@@ -190,98 +194,197 @@ function randn_bm() {
     return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
 }
 
-function init(weight_initializer, bias_initializer) {
-    var html = '';
+function initWeights(weight_initializer, bias_initializer) {
     weights = [];
     biases = [];
 
-    for (var i = 0; i < layers.length; ++i) {
-        var numPrevNeurons = i > 0 ? layers[i - 1] : 2;
+    for (var i = 0; i < numNeurons.length; ++i) {
+        var numPrevNeurons = i > 0 ? numNeurons[i - 1] : 2;
         
-        weights.push(math.zeros(numPrevNeurons, layers[i]).map(() => weight_initializer()));
-        biases.push(math.zeros(layers[i]).map(() => bias_initializer()));
+        weights.push(math.zeros(numPrevNeurons, numNeurons[i]).map(() => weight_initializer()));
+        biases.push(math.zeros(numNeurons[i]).map(() => bias_initializer()));
+    }
+}
 
+/**
+ * Matrix helpers
+ */
+function dropAlongDim(mat, idx, axis) {
+    var indices = [];
+    var outputShape = [];
+
+    for (var ax = 0; ax < mat.size().length; ++ax) {
+        var size = mat.size()[ax];
+        if (ax == axis) {
+            indices.push(math.concat(math.range(0, idx), math.range(idx + 1, size)));
+            outputShape.push(size - 1);
+        } else {
+            indices.push(math.range(0, size));
+            outputShape.push(size);
+        }
+    }
+
+    var output = math.subset(mat, math.index.apply(this, indices));
+
+    if (math.isNumber(output)) {
+        output = math.reshape(math.matrix([output]), outputShape);
+    }
+
+    return output;
+}
+
+/**
+ * UI rendering
+ */
+function renderControls() {
+    var html = '';
+
+    // Generate HTML
+    for (var i = 0; i < numNeurons.length; ++i) {
+        var numPrevNeurons = i > 0 ? numNeurons[i - 1] : 2;
+        
         html += '<div class="layer">';
-        for (var j = 0; j < layers[i]; ++j) {
-            html += '<div class="neuron card"><div class="card-body"><label>Weights:</label>';
+        for (var j = 0; j < numNeurons[i]; ++j) {
+            html += '<div class="neuron card">';
+            html += '<div class="card-body">';
+            if (j > 0 || (i === numNeurons.length - 1) && numNeurons[numNeurons.length - 2] === 1) {
+                html += '<button type="button" class="btn btn-danger del">X</button>';
+            }
+            html += '<label>Weights:</label>';
             for (var k = 0; k < numPrevNeurons; ++k) {
                 html += '<input type="range" min="-2" max="2" step="0.001" value="' + weights[i].get([k, j]) + '" class="weight custom-range">';
                 html += '<span>' + Math.round(weights[i].get([k, j]) * 1000) / 1000 + '</span>';
             }
-            html += '<label>Bias:</label><input type="range" min="-2" max="2" step="0.001" value="' + biases[i].get([j]) + '" class="bias custom-range">';
+            html += '<label>Bias:</label>';
+            html += '<input type="range" min="-2" max="2" step="0.001" value="' + biases[i].get([j]) + '" class="bias custom-range">';
             html += '<span>' + Math.round(biases[i].get([j]) * 1000) / 1000 + '</span>';
-            html += '</div></div>';
+            html += '</div>';
+            html += '</div>';
+        }
+        if (i < numNeurons.length - 1) {
+            html += '<button type="button" class="btn btn-primary add-neuron">Add neuron</button>';
+        } else {
+            html += '<button type="button" class="btn btn-primary add-layer">Add layer</button>';
         }
         html += '</div>';
     }
     $('#weights').html(html);
 
-    $('.weight').on('input', (e) => {
+    function getNeuron(e) {
         var layerEl = $(e.target).closest('.layer');
         var neuronEl = $(e.target).closest('.neuron');
         var layer = $('.layer').index(layerEl);
         var neuron = layerEl.children('.neuron').index(neuronEl);
         var input = neuronEl.find('input').index(e.target);
+        return [layer, neuron, input];
+    }
 
+    // Handle weight change
+    $('.weight').on('input', (e) => {
+        var [layer, neuron, input] = getNeuron(e);
         $(e.target).next().text(e.target.value);
         weights[layer] = weights[layer].subset(math.index(input, neuron), parseFloat(e.target.value));
-        showAR();
+        renderAR();
     });
 
+    // Handle bias change
     $('.bias').on('input', (e) => {
-        var layerEl = $(e.target).closest('.layer');
-        var neuronEl = $(e.target).closest('.neuron');
-        var layer = $('.layer').index(layerEl);
-        var neuron = layerEl.children('.neuron').index(neuronEl);
-
+        var [layer, neuron, input] = getNeuron(e);
         $(e.target).next().text(e.target.value);
         biases[layer] = biases[layer].subset(math.index(neuron), parseFloat(e.target.value));
-        showAR();
+        renderAR();
     });
 
+    // Highlight hyperplane on hover
     $('.neuron').on('mouseenter', (e) => {
-        var layerEl = $(e.target).closest('.layer');
-        var neuronEl = $(e.target).closest('.neuron');
-        var layer = $('.layer').index(layerEl);
-        var neuron = layerEl.children('.neuron').index(neuronEl);
-
+        var [layer, neuron, input] = getNeuron(e);
         highlightedEdge = layer + '/' + neuron;
-        showAR();
+        renderAR();
     });
 
-    $('.neuron').on('mouseleave', (e) => {
+    $('.neuron').on('mouseleave', () => {
         highlightedEdge = null;
-        showAR();
+        renderAR();
     });
 
-    showAR();
+    // Handle neuron add
+    $('.add-neuron').on('click', (e) => {
+        var [layer, neuron, input] = getNeuron(e);
+        var a = layer > 0 ? numNeurons[layer - 1] : 2;
+        var c = numNeurons[layer + 1];
+
+        weights[layer] = math.concat(weights[layer], math.zeros(a, 1), 1);
+        weights[layer + 1] = math.concat(weights[layer + 1], math.zeros(1, c), 0);
+        biases[layer] = math.concat(biases[layer], [0]);
+        numNeurons[layer]++;
+
+        renderControls();
+        renderAR();
+    });
+
+    // Handle neuron delete
+    $('.del').on('click', (e) => {
+        var [layer, neuron, input] = getNeuron(e);
+
+        if (numNeurons[layer] > 1) {
+            weights[layer] = dropAlongDim(weights[layer], neuron, 1);
+            weights[layer + 1] = dropAlongDim(weights[layer + 1], neuron, 0);
+            biases[layer] = dropAlongDim(biases[layer], neuron, 0);
+            numNeurons[layer]--;
+        } else {
+            weights.splice(layer, 1);
+            biases.splice(layer, 1);
+            numNeurons.splice(layer, 1);
+        }
+
+        renderControls();
+        renderAR();
+    });
+
+    // Handle layer add
+    $('.add-layer').on('click', (e) => {
+        weights.push(math.zeros(1, 1));
+        biases.push(math.zeros(1));
+        numNeurons.push(1);
+
+        renderControls();
+        renderAR();
+    });
+
+    renderAR();
 }
 
+// Button controls
 function initNormal() {
-    init(() => randn_bm() * .5, () => randn_bm() * .1);
+    initWeights(() => randn_bm() * .5, () => randn_bm() * .1);
+    renderControls();
+    renderAR();
 }
 
-function initZeroBias() {
-    init(() => randn_bm() * .1, () => 0);
-}
+$('#init-normal').on('click', initNormal);
 
-function initAllZero() {
-    init(() => 0, () => 0);
-}
+$('#init-allzero').on('click', () => {
+    initWeights(() => 0, () => 0);
+    renderControls();
+    renderAR();
+});
+
+$('#init-zerobias').on('click', () => {
+    initWeights(() => randn_bm() * .1, () => 0);
+    renderControls();
+    renderAR();
+});
 
 /**
  * UI
  */
-var layers = [4, 1];
+var numNeurons = [4, 1];
 var weights = [], biases = [];
 var highlightedEdge = null;
 
-$('#init-normal').on('click', initNormal);
-$('#init-zerobias').on('click', initZeroBias);
-$('#init-zero').on('click', initAllZero);
 
 /**
- * 3D Rendering
+ * Set up 3D scene
  */
 var scene = new THREE.Scene();
 scene.background = new THREE.Color( 0xffffff );
@@ -297,14 +400,14 @@ var renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
 renderer.setSize( window.innerWidth / 2, window.innerHeight );
 $('body').append(renderer.domElement);
 
-
-var controls = new THREE.OrbitControls( camera, renderer.domElement );
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
 
 function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 }
-  
+
 animate();
 
-initNormal(layers);
+initNormal();
+renderControls();

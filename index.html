@@ -5,14 +5,17 @@
         <title>Activation Regions</title>
         <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 		<style>
-			body { margin: 0; font-family: sans-serif; font-size: 14px; text-align: center; display: flex; align-items: center; }
+            html, body, #controls { height: 100%; }
+			body { margin: 0; font-family: sans-serif; font-size: 14px; text-align: center; display: flex; align-items: flex-start; }
 			canvas { display: block; }
             canvas:focus { outline: none; }
-            #controls { flex: 1; }
-            #weights { display: flex; justify-content: center; align-items: center; }
-            .layer { width: 300px; margin: 0 20px; }
-            .neuron { margin: 10px 0; }
+            #controls { flex: 1; max-width: 50%; overflow-y: scroll; }
+            #init { margin: 10px 0; }
+            #weights { display: flex; justify-content: center; align-items: flex-start; }
+            .layer { width: 300px; margin: 0 10px; }
+            .neuron { margin: 10px 0; position: relative; }
             .neuron:hover { border-color: #007bff; }
+            .del { padding: 0; width: 24px; height: 24px; border-radius: 12px; font-size: .8rem; position: absolute; top: 5px; right: 5px; }
             .custom-range { width: 80%; }
             span { width: 20%; text-align: right; display: inline-block; vertical-align: top; }
             label { display: block; }
@@ -21,9 +24,11 @@
 	<body>
         <div id="controls">
             <div id="init">
-                <button id="init-normal" class="btn btn-secondary">Initialize with Gaussian</button>
-                <button id="init-zero" class="btn btn-secondary">Initialize with all zeros</button>
-                <button id="init-zerobias" class="btn btn-secondary">Initialize with zero bias</button>
+                <div class="btn-group">
+                    <button id="init-normal" class="btn btn-secondary">Initialize with Gaussian</button>
+                    <button id="init-allzero" class="btn btn-secondary">Initialize with all zeros</button>
+                    <button id="init-zerobias" class="btn btn-secondary">Initialize with zero bias</button>    
+                </div>
             </div>
             <div id="weights">
             </div>
